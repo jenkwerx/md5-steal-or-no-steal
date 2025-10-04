@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steal or No Steal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .final-amount {
+            font-size: 3em;
+            font-weight: bold;
+            color: #330000;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            margin-bottom: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.4em;
+            }
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            color: white;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .game-info {
+                font-size: 0.9em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .game-info {
+                font-size: 0.8em;
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        .boxs-grid {
+            display: grid;
+            grid-template-columns: repeat(14, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        @media (max-width: 1024px) {
+            .boxs-grid {
+                grid-template-columns: repeat(7, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .boxs-grid {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 8px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .boxs-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+            }
+        }
+
+        .box {
+            background: linear-gradient(145deg, #d4a574, #c89158);
+            border: 3px solid #8b6f47;
+            border-radius: 3px;
+            padding: 20px 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 -10px 20px rgba(0,0,0,0.2);
+            position: relative;
+            border-top: 8px solid #e8c9a0;
+            border-left: 2px solid #a88560;
+            border-right: 2px solid #a88560;
+        }
+        
+        @media (max-width: 768px) {
+            .box {
+                padding: 15px 8px;
+                font-size: 1em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .box {
+                padding: 12px 5px;
+                font-size: 0.9em;
+            }
+        }
+        
+        .box::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 8px;
+            background: linear-gradient(to bottom, #f0d9b5, #d4a574);
+            border-radius: 2px 2px 0 0;
+        }
+        
+        .box::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 100%;
+            background: rgba(139, 111, 71, 0.3);
+        }
+
+        .box:hover:not(.opened):not(.your-box) {
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+
+        .box.your-box::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3em;
+            color: #32ff32;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .box.opened {
+            background: linear-gradient(145deg, #555, #777);
+            border-color: #333;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .box.your-box {
+            background: linear-gradient(145deg, #00d9ff, #00b8d4);
+            border-color: #0097a7;
+            cursor: default;
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.6), inset 0 -10px 20px rgba(0,0,0,0.2);
+            outline: 4px solid #32ff32;
+            outline-offset: 3px;
+            border-top: 8px solid #5ee7ff;
+        }
+        
+        .box.your-box::before {
+            background: linear-gradient(to bottom, #5ee7ff, #00d9ff);
+        }
+
+        .board {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .values-board {
+            flex: 1;
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .values-column {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .values-column {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .values-column {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 5px;
+            }
+        }
+
+        .value-item {
+            background: white;
+            padding: 8px 5px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+            color: #1e3c72;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .value-item {
+                padding: 6px 4px;
+                font-size: 0.8em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .value-item {
+                padding: 5px 3px;
+                font-size: 0.7em;
+            }
+        }
+
+        .value-item.eliminated {
+            background: #ccc;
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        .kingpin-offer {
+            background: rgba(255,255,255,0.95);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .kingpin-offer {
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .kingpin-offer {
+                padding: 15px;
+            }
+        }
+
+        .kingpin-offer h2 {
+            color: #1e3c72;
+            margin-bottom: 20px;
+        }
+
+        .offer-amount {
+            font-size: 3em;
+            color: #2a5298;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .offer-amount {
+                font-size: 2.5em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .offer-amount {
+                font-size: 2em;
+                margin: 15px 0;
+            }
+        }
+
+        .button {
+            background: linear-gradient(145deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        
+        @media (max-width: 768px) {
+            .button {
+                padding: 12px 30px;
+                font-size: 1.1em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .button {
+                padding: 10px 20px;
+                font-size: 1em;
+                margin: 5px;
+            }
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .button.no-deal {
+            background: linear-gradient(145deg, #f44336, #da190b);
+        }
+
+        .message {
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            margin: 10px 0;
+            min-height: 25px;
+        }
+        
+        @media (max-width: 768px) {
+            .message {
+                font-size: 1em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .message {
+                font-size: 0.9em;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 STEAL OR NO STEAL 📦</h1>
+        </div>
+
+        <div class="game-info">
+            <div>Boxes Opened: <span id="boxsOpened">0</span>/28</div>
+            <div id="lastOffer" style="display: none;">Last Rejected: <span id="lastOfferAmount">0</span> credits</div>
+            <div>Round: <span id="round">Pick Your Box</span></div>
+        </div>
+
+        <div class="message" id="message">Select your box to begin!</div>
+        <div class="message" id="boxReveal" style="display: none;"></div>
+
+        <div class="boxs-grid" id="boxsGrid"></div>
+
+        <div class="board">
+            <div class="values-board">
+                <h3 style="color: white; text-align: center; margin-bottom: 15px;">Remaining Values</h3>
+                <div class="values-column" id="valuesBoard"></div>
+            </div>
+        </div>
+
+        <div id="kingpinOffer" class="kingpin-offer hidden">
+            <h2>📞 The Kingpin's Offer 📞</h2>
+            <div class="offer-amount" id="offerAmount">0 credits</div>
+            <button class="button" onclick="acceptDeal()">STEAL!</button>
+            <button class="button no-deal" onclick="rejectDeal()">NO STEAL!</button>
+        </div>
+    </div>
+
+    <script>
+        const values = [5000, 2500, 1250, 1000, 750, 625, 500, 450, 425, 400,
+                       350, 325, 300, 275, 250, 225, 200, 175, 150, 125, 
+                       100, 75, 66, 50, 33, 25, 10, 1];
+        
+        let boxs = [];
+        let playerbox = null;
+        let openedboxs = 0;
+        let currentRound = 0;
+        let boxsToOpenThisRound = 0;
+        let boxsOpenedThisRound = 0;
+        let offerPending = false;
+        let lastRejectedOffer = null;
+        const roundStructure = [6, 5, 4, 3, 2, 2, 2, 1, 1, 1];
+
+        function initGame() {
+            const shuffledValues = [...values];
+            shuffleArray(shuffledValues);
+            
+            boxs = shuffledValues.map((val, idx) => ({
+                number: idx + 1,
+                value: val,
+                opened: false
+            }));
+            
+            playerbox = null;
+            openedboxs = 0;
+            currentRound = 0;
+            boxsToOpenThisRound = 0;
+            boxsOpenedThisRound = 0;
+            offerPending = false;
+            lastRejectedOffer = null;
+
+            document.getElementById('kingpinOffer').classList.add('hidden');
+            document.getElementById('message').textContent = 'Select your box to begin!';
+            
+            renderboxs();
+            renderValues();
+            updateInfo();
+        }
+
+        function shuffleArray(arr) {
+            for (let ii = 10; ii > 0; ii--) {
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+            }
+        }
+
+        function renderboxs() {
+            const grid = document.getElementById('boxsGrid');
+            grid.innerHTML = '';
+            
+            boxs.forEach((c, idx) => {
+                const div = document.createElement('div');
+                div.className = 'box';
+                div.textContent = c.number;
+                
+                if (c.opened) {
+                    div.classList.add('opened');
+                } else if (playerbox && c.number === playerbox.number) {
+                    div.classList.add('your-box');
+                } else {
+                    div.onclick = () => selectbox(idx);
+                }
+                
+                grid.appendChild(div);
+            });
+        }
+
+        function renderValues() {
+            const board = document.getElementById('valuesBoard');
+            board.innerHTML = '';
+            
+            const sortedValues = [...values].sort((a, b) => b - a);
+            sortedValues.forEach(val => {
+                const div = document.createElement('div');
+                div.className = 'value-item';
+                div.textContent = val + ' credits';
+                
+                const stillInPlay = boxs.some(c => !c.opened && c.value === val && c !== playerbox);
+                const isPlayerbox = playerbox && playerbox.value === val;
+                
+                if (!stillInPlay && !isPlayerbox) {
+                    div.classList.add('eliminated');
+                }
+                
+                board.appendChild(div);
+            });
+        }
+
+        function selectbox(idx) {
+            if (offerPending) {
+                return;
+            }
+
+            if (!playerbox) {
+                playerbox = boxs[idx];
+                document.getElementById('message').textContent = `You selected box #${playerbox.number}! Now open ${roundStructure[0]} boxes.`;
+                currentRound = 0;
+                boxsToOpenThisRound = roundStructure[currentRound];
+                boxsOpenedThisRound = 0;
+                renderboxs();
+                updateInfo();
+            } else {
+                if (!boxs[idx].opened && boxs[idx] !== playerbox) {
+                    boxs[idx].opened = true;
+                    openedboxs++;
+                    boxsOpenedThisRound++;
+                    
+                    document.getElementById('boxReveal').textContent = `Box #${boxs[idx].number} contained ${boxs[idx].value} credits!`;
+                    document.getElementById('boxReveal').style.display = 'block';
+                    
+                    renderboxs();
+                    renderValues();
+                    updateInfo();
+                    
+                    if (boxsOpenedThisRound >= boxsToOpenThisRound) {
+                        if (openedboxs >= 27) {
+                            endGame(false);
+                        } else {
+                            showkingpinOffer();
+                        }
+                    } else {
+                        const remaining = boxsToOpenThisRound - boxsOpenedThisRound;
+                        setTimeout(() => {
+                            document.getElementById('message').textContent = `Open ${remaining} more box${remaining > 1 ? 'es' : ''}!`;
+                        }, 1500);
+                    }
+                }
+            }
+        }
+
+        function updateInfo() {
+            document.getElementById('boxsOpened').textContent = openedboxs;
+            if (!playerbox) {
+                document.getElementById('round').textContent = 'Pick Your Box';
+            } else if (boxsOpenedThisRound < boxsToOpenThisRound) {
+                document.getElementById('round').textContent = `Round ${currentRound + 1} - Open ${boxsToOpenThisRound - boxsOpenedThisRound} more`;
+            } else {
+                document.getElementById('round').textContent = `Round ${currentRound + 1} Complete`;
+            }
+        }
+
+        function calculateOffer() {
+            const remainingValues = boxs.filter(c => !c.opened || c == playerbox).map(c => c.value);
+            const avg = remainingValues.reduce((a, b) => a + b, 0) / remainingValues.length;
+            const factor = 0.6 + 0.3 * ((28 - remainingValues.length) / 28);
+            return Math.round(avg * factor);
+        }
+
+        function showkingpinOffer() {
+            boxsOpenedThisRound = 0;
+            offerPending = true;
+            const offer = calculateOffer();
+            document.getElementById('kingpinOffer').innerHTML = `
+                <h2>📞 The Kingpin's Offer 📞</h2>
+                <div class="offer-amount">${offer} credits</div>
+                <button class="button" onclick="acceptDeal()">STEAL!</button>
+                <button class="button no-deal" onclick="rejectDeal()">NO STEAL!</button>
+            `;
+            document.getElementById('kingpinOffer').classList.remove('hidden');
+            document.getElementById('message').textContent = 'The Kingpin is calling...';
+        }
+
+        function acceptDeal() {
+            const offerText = document.querySelector('#kingpinOffer .offer-amount').textContent;
+            const offer = parseInt(offerText.replace(' credits', ''));
+            document.getElementById('kingpinOffer').innerHTML = `
+                <h2>🤝 DEAL! 🤝</h2>
+                <div class="final-amount">${offer} credits</div>
+                <p style="margin: 20px 0; font-size: 1.2em; color: #555;">
+                    You accepted the Kingpin's offer! Your box contained ${playerbox.value} credits.
+                </p>
+                <button class="button" onclick="resetGame()">Play Again</button>
+            `;
+        }
+
+        function rejectDeal() {
+            const offerText = document.querySelector('#kingpinOffer .offer-amount').textContent;
+            lastRejectedOffer = parseInt(offerText.replace(' credits', ''));
+            document.getElementById('lastOfferAmount').textContent = lastRejectedOffer;
+            document.getElementById('lastOffer').style.display = 'block';
+            
+            document.getElementById('kingpinOffer').classList.add('hidden');
+            offerPending = false;
+            currentRound++;
+            
+            if (currentRound >= roundStructure.length) {
+                endGame(false);
+            } else {
+                boxsToOpenThisRound = roundStructure[currentRound];
+                boxsOpenedThisRound = 0;
+                document.getElementById('message').textContent = `NO STEAL! Open ${boxsToOpenThisRound} box${boxsToOpenThisRound > 1 ? 'es' : ''}!`;
+                updateInfo();
+            }
+        }
+
+        function endGame(dealtEarly) {
+            document.getElementById('kingpinOffer').innerHTML = `
+                <h2>🎉 GAME OVER! 🎉</h2>
+                <div class="final-amount">${playerbox.value} credits</div>
+                <p style="margin: 20px 0; font-size: 1.2em; color: #555;">
+                    Your box #${playerbox.number} contained ${playerbox.value} credits!
+                </p>
+                <button class="button" onclick="resetGame()">Play Again</button>
+            `;
+            document.getElementById('kingpinOffer').classList.remove('hidden');
+        }
+
+        function resetGame() {
+            initGame();
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
